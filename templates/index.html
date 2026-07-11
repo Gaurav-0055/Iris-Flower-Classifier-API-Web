@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Flower Classifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-teal-50 min-h-screen flex items-center justify-center p-6">
+
+    <div class="bg-white rounded-3xl shadow-lg border border-teal-100 max-w-md w-full p-8">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🌸</span>
+            <h1 class="text-2xl font-bold text-slate-800">Iris Flower Predictor</h1>
+        </div>
+        <p class="text-sm text-slate-500 mb-6">Enter the measurements below to classify the flower species using our trained model.</p>
+
+        <form id="predictionForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wider mb-1">Sepal Length (cm)</label>
+                <input type="number" step="0.1" name="sepal_length" required placeholder="e.g. 5.1"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wider mb-1">Sepal Width (cm)</label>
+                <input type="number" step="0.1" name="sepal_width" required placeholder="e.g. 3.5"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wider mb-1">Petal Length (cm)</label>
+                <input type="number" step="0.1" name="petal_length" required placeholder="e.g. 1.4"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wider mb-1">Petal Width (cm)</label>
+                <input type="number" step="0.1" name="petal_width" required placeholder="e.g. 0.2"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition">
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-md mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                Classify Flower
+            </button>
+        </form>
+
+        <div id="resultBox" class="hidden mt-6 p-4 rounded-xl border text-center transition">
+            <p id="resultText" class="text-base font-medium"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const resultBox = document.getElementById('resultBox');
+            const resultText = document.getElementById('resultText');
+            const submitBtn = document.getElementById('submitBtn');
+
+            const formData = new FormData(e.target);
+            const payload = {
+                sepal_length: parseFloat(formData.get('sepal_length')),
+                sepal_width: parseFloat(formData.get('sepal_width')),
+                petal_length: parseFloat(formData.get('petal_length')),
+                petal_width: parseFloat(formData.get('petal_width'))
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Classifying...";
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                resultBox.classList.remove('hidden', 'bg-red-50', 'border-red-100', 'bg-emerald-50', 'border-emerald-100');
+
+                if (response.ok) {
+                    resultBox.classList.add('bg-emerald-50', 'border-emerald-100');
+                    resultText.className = "text-emerald-800 font-semibold text-lg";
+                    resultText.innerText = `🌼 Prediction: ${data.class}`;
+                } else {
+                    throw new Error(data.error || 'Server processing error');
+                }
+            } catch (err) {
+                resultBox.classList.add('bg-red-50', 'border-red-100');
+                resultText.className = "text-red-800 font-medium text-sm";
+                resultText.innerText = `Error: ${err.message}`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Classify Flower";
+            }
+        });
+    </script>
+</body>
+</html>
